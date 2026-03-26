@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.*
+!.env.example
+!src/.env
+!src/.env.dist
+!src/.env.test
+
+# Logs and runtime
+*.log
+logs/
+tmp/
+
+# Docker local artifacts
+docker/**/*.log
+docker/**/data/
+
+# Symfony app
+src/vendor/
+src/var/cache/
+src/var/log/
+src/var/sessions/
+src/var/test/
+src/var/tmp/
+src/.phpunit.result.cache
+src/.php-cs-fixer.cache
+src/.env.local
+src/.env.local.php
+src/.env.*.local
+
+# Frontend dependencies/builds inside src
+src/node_modules/
+src/public/build/
+src/public/bundles/
+
+# Test/coverage artifacts
+src/coverage/
+src/.coverage
+src/phpunit.xml
+src/phpunit.xml.dist.bak
+
+# Composer artifacts
+src/composer.phar
