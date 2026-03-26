@@ -1,0 +1,16 @@
+.git
+.gitignore
+.idea
+README.md
+
+# Environment files
+.env
+.env.*
+!/.env.example
+src/.env
+src/.env.*
+!/src/.env.example
+
+src/var
+src/vendor
+src/node_modules
