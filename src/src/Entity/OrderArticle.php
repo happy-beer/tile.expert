@@ -132,4 +132,59 @@ class OrderArticle
 
         return $this;
     }
+
+    public function getArticleId(): ?int
+    {
+        return $this->articleId;
+    }
+
+    public function getAmount(): float
+    {
+        return $this->amount;
+    }
+
+    public function getPrice(): float
+    {
+        return $this->price;
+    }
+
+    public function getPriceEur(): ?float
+    {
+        return $this->priceEur;
+    }
+
+    public function getCurrency(): ?string
+    {
+        return $this->currency;
+    }
+
+    public function getMeasure(): ?string
+    {
+        return $this->measure;
+    }
+
+    public function getWeight(): float
+    {
+        return $this->weight;
+    }
+
+    public function getPackagingCount(): float
+    {
+        return $this->packagingCount;
+    }
+
+    public function getPallet(): float
+    {
+        return $this->pallet;
+    }
+
+    public function getPackaging(): float
+    {
+        return $this->packaging;
+    }
+
+    public function isSwimmingPool(): bool
+    {
+        return $this->swimmingPool;
+    }
 }

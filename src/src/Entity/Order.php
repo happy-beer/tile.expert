@@ -200,4 +200,37 @@ class Order
 
         return $this;
     }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function getMeasure(): string
+    {
+        return $this->measure;
+    }
+
+    /**
+     * @return Collection<int, OrderArticle>
+     */
+    public function getArticles(): Collection
+    {
+        return $this->articles;
+    }
+
+    public function addArticle(OrderArticle $article): self
+    {
+        if (!$this->articles->contains($article)) {
+            $this->articles->add($article);
+            $article->setOrder($this);
+        }
+
+        return $this;
+    }
 }
