@@ -108,6 +108,34 @@ class Order
         return $this->email;
     }
 
+    public function setVatType(int $vatType): self
+    {
+        $this->vatType = $vatType;
+
+        return $this;
+    }
+
+    public function setLocale(string $locale): self
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function setCurrency(string $currency): self
+    {
+        $this->currency = $currency;
+
+        return $this;
+    }
+
+    public function setMeasure(string $measure): self
+    {
+        $this->measure = $measure;
+
+        return $this;
+    }
+
     public function setEmail(?string $email): self
     {
         $this->email = $email;

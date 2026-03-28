@@ -62,4 +62,74 @@ class OrderArticle
     {
         return $this->id;
     }
+
+    public function setOrder(Order $order): self
+    {
+        $this->order = $order;
+
+        return $this;
+    }
+
+    public function setArticleId(?int $articleId): self
+    {
+        $this->articleId = $articleId;
+
+        return $this;
+    }
+
+    public function setPriceEur(?float $priceEur): self
+    {
+        $this->priceEur = $priceEur;
+
+        return $this;
+    }
+
+    public function setCurrency(?string $currency): self
+    {
+        $this->currency = $currency;
+
+        return $this;
+    }
+
+    public function setMeasure(?string $measure): self
+    {
+        $this->measure = $measure;
+
+        return $this;
+    }
+
+    public function setWeight(float $weight): self
+    {
+        $this->weight = $weight;
+
+        return $this;
+    }
+
+    public function setPackagingCount(float $packagingCount): self
+    {
+        $this->packagingCount = $packagingCount;
+
+        return $this;
+    }
+
+    public function setPallet(float $pallet): self
+    {
+        $this->pallet = $pallet;
+
+        return $this;
+    }
+
+    public function setPackaging(float $packaging): self
+    {
+        $this->packaging = $packaging;
+
+        return $this;
+    }
+
+    public function setSwimmingPool(bool $swimmingPool): self
+    {
+        $this->swimmingPool = $swimmingPool;
+
+        return $this;
+    }
 }

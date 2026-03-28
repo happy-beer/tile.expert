@@ -15,6 +15,7 @@ RUN apk add --no-cache \
         opcache \
         pdo \
         pdo_pgsql \
+        soap \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del --no-network ${PHPIZE_DEPS} \
