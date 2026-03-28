@@ -166,21 +166,6 @@ final class TileExpertClient
         return mb_strtolower($normalized);
     }
 
-    private function extractCandidate(Crawler $crawler, string $selector, ?string $attr): ?string
-    {
-        $node = $crawler->filter($selector);
-        if ($node->count() === 0) {
-            return null;
-        }
-
-        if ($attr !== null) {
-            $value = $node->first()->attr($attr);
-            return $value !== null ? trim($value) : null;
-        }
-
-        return trim($node->first()->text(''));
-    }
-
     private function parsePriceString(string $raw): ?float
     {
         $normalized = str_replace(["\u{00A0}", ' '], '', trim($raw));

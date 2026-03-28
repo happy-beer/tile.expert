@@ -77,3 +77,39 @@ curl "http://localhost:${APP_PORT:-8080}/api/price?factory=marca-corona&collecti
   "article": "k263-arteseta-camoscio-s000628660"
 }
 ```
+
+### GET `/api/search`
+Поиск заказов через Manticore (с fallback на PostgreSQL при недоступности Manticore).
+
+Параметры:
+- `q` (обязательный, от 2 символов)
+- `page` (по умолчанию `1`)
+- `limit` (по умолчанию `20`, максимум `100`)
+
+Пример запроса:
+
+```bash
+curl "http://localhost:${APP_PORT:-8080}/api/search?q=marca&page=1&limit=20"
+```
+
+### GET/POST `/api/search/reindex`
+Ручной запуск переиндексации поиска из PostgreSQL в Manticore.
+
+Параметры:
+- `limit` (опциональный, по умолчанию `10000`, максимум `50000`)
+
+Пример запроса:
+
+```bash
+curl -X POST "http://localhost:${APP_PORT:-8080}/api/search/reindex?limit=10000"
+```
+
+Пример ответа:
+
+```json
+{
+  "status": "success",
+  "indexed": 10000,
+  "limit": 10000
+}
+```

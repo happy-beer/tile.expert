@@ -8,6 +8,7 @@ services:
       APP_DEBUG: ${APP_DEBUG:-1}
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-tile_app}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
+      MANTICORE_URL: ${MANTICORE_URL:-http://manticore:9308}
     volumes:
       - ./src:/var/www/html
     depends_on:

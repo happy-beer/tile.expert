@@ -34,18 +34,6 @@ final class SoapOrderService
         'swimming_pool',
     ];
 
-    private const BOOLEAN_FIELDS = [
-        'address_equal',
-        'bank_transfer_requested',
-        'accept_pay',
-        'product_review',
-        'process',
-        'payment_euro',
-        'spec_price',
-        'show_msg',
-        'swimming_pool',
-    ];
-
     public function __construct(private readonly EntityManagerInterface $em)
     {
     }
