@@ -1,73 +1,115 @@
 # tile.expert service
 
-## Общее описание проекта
-Проект представляет собой backend-приложение, которое интегрируется с `https://tile.expert`, обрабатывает заказы и предоставляет API для получения цен, статистики и данных заказов. Приложение предназначено для запуска в Docker-окружении через `docker-compose` (с опциональными командами через `Makefile`) и отвечает на HTTP/SOAP-запросы.
+Symfony + Docker backend for:
+- parsing tile prices from `tile.expert`
+- orders statistics
+- SOAP order creation
+- single order retrieval
+- full-text search (Manticore + PostgreSQL fallback)
 
-Основная идея: дать единый сервисный слой для работы с товарными ценами и заказами, включая возможность агрегации данных и полнотекстового поиска через Manticore.
+## Project structure
 
-## Функциональные требования
-Сервис должен предоставлять следующие API-возможности:
+```text
+tile-app/
+├── docker/
+├── src/         ← Symfony app
+├── docker-compose.yml
+├── Makefile
+├── README.md
+```
 
-1. Получение цены товара (`GET`)  
-   По параметрам `factory`, `collection`, `article` сервис извлекает цену в EUR со страницы `tile.expert` и возвращает JSON в формате:
-   `{"price": 59.99, "factory": "...", "collection": "...", "article": "..."}`
+## Stack
+- PHP 8.3 / Symfony 7.4
+- PostgreSQL 16
+- Redis 7
+- Manticore Search
+- Nginx
+- Docker Compose
 
-2. Статистика заказов с пагинацией (`GET`)  
-   Возврат агрегированных данных по заказам с группировкой по дням/месяцам/годам, а также метаданными пагинации (страница, размер страницы, количество страниц и т.д.).
+## Quick start
 
-3. Создание данных по SOAP  
-   SOAP-эндпоинт для приема и сохранения (создания) данных.
+1. Copy env file:
 
-4. Получение одного заказа  
-   Эндпоинт для получения данных заказа по идентификатору.
+```bash
+cp .env.example .env
+```
 
-5. Поиск через Manticore  
-   Поддержка поиска по данным приложения через Manticore Search.
+2. Build and start containers:
 
-## Архитектурная концепция
-Проект строится как сервис на Symfony с разделением ответственности:
+```bash
+docker compose up -d --build
+```
 
-- API-слой (контроллеры/контракты запросов и ответов)
-- прикладные сервисы (бизнес-логика)
-- интеграционный слой (внешние HTTP-ресурсы, SOAP и поиск)
-- слой доступа к данным (репозитории и БД)
+3. Install PHP dependencies (inside container):
 
-Инфраструктурно приложение запускается в контейнерах:
+```bash
+docker compose exec app composer install
+```
 
-- `app` (PHP/Symfony)
-- `nginx` (HTTP entrypoint)
-- `db` (PostgreSQL)
-- `redis`
-- `manticore`
+4. Run migrations:
 
-## Инфраструктурные требования
-- Сборка и запуск через `docker compose`
-- Настройка портов и окружения через переменные (`.env`)
-- Возможность запуска через `make`-команды
-- Описание API в `README` (и/или Swagger)
-- Покрытие базовыми тестами
-- История Git с поэтапными коммитами выполнения
+```bash
+docker compose exec app php bin/console doctrine:migrations:migrate -n
+```
 
-## Переменные окружения (пример)
-В проекте используются настраиваемые параметры окружения:
+## Load DB dump
 
-- `APP_PORT`
-- `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- `MANTICORE_MYSQL_PORT`, `MANTICORE_HTTP_PORT`
-- `REDIS_PORT`
-- `APP_ENV`, `APP_DEBUG`
+If you use the provided dump (`/Users/kitty/Downloads/dump.sql`), import it into PostgreSQL:
 
-## Эндпоинты
-### GET `/api/price`
-Возвращает цену в EUR для товара по параметрам `factory`, `collection`, `article`.
+```bash
+docker compose exec -T db psql -U ${DB_USER:-postgres} -d ${DB_NAME:-tile_app} < /Users/kitty/Downloads/dump.sql
+```
 
-Пример запроса:
+## Useful commands
+
+```bash
+make up
+make down
+make logs
+make ps
+make bash
+```
+
+Manual reindex command:
+
+```bash
+docker compose exec app php bin/console app:search:reindex --limit=10000
+```
+
+Run tests:
+
+```bash
+docker compose exec app php bin/phpunit
+```
+
+## API documentation (Swagger)
+
+- Swagger UI: [http://localhost:${APP_PORT:-8080}/api/doc](http://localhost:8080/api/doc)
+- OpenAPI JSON: [http://localhost:${APP_PORT:-8080}/api/doc.json](http://localhost:8080/api/doc.json)
+
+OpenAPI dump from CLI:
+
+```bash
+docker compose exec app php bin/console nelmio:apidoc:dump --format=json
+```
+
+## Endpoints
+
+### 1) GET `/api/price`
+Returns tile price in EUR from source site.
+
+Query params:
+- `factory` (required)
+- `collection` (required)
+- `article` (required)
+
+Example:
 
 ```bash
 curl "http://localhost:${APP_PORT:-8080}/api/price?factory=marca-corona&collection=arteseta&article=k263-arteseta-camoscio-s000628660"
 ```
 
-Пример успешного ответа:
+Response example:
 
 ```json
 {
@@ -78,33 +120,101 @@ curl "http://localhost:${APP_PORT:-8080}/api/price?factory=marca-corona&collecti
 }
 ```
 
-### GET `/api/search`
-Поиск заказов через Manticore (с fallback на PostgreSQL при недоступности Manticore).
+### 2) GET `/api/orders/stats`
+Returns orders aggregation grouped by day/month/year with pagination metadata.
 
-Параметры:
-- `q` (обязательный, от 2 символов)
-- `page` (по умолчанию `1`)
-- `limit` (по умолчанию `20`, максимум `100`)
+Query params:
+- `groupBy`: `day | month | year` (default `month`)
+- `page` (default `1`)
+- `limit` (default `20`, max `500`)
 
-Пример запроса:
+Example:
+
+```bash
+curl "http://localhost:${APP_PORT:-8080}/api/orders/stats?groupBy=month&page=1&limit=20"
+```
+
+### 3) POST `/api/orders/soap`
+Creates order (and `orders_article` rows) from SOAP XML.
+
+Headers:
+- `Content-Type: text/xml; charset=UTF-8`
+
+Example:
+
+```bash
+curl -X POST "http://localhost:${APP_PORT:-8080}/api/orders/soap" \
+  -H "Content-Type: text/xml; charset=UTF-8" \
+  --data-binary '<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <createOrder>
+      <order>
+        <hash>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</hash>
+        <token>bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb</token>
+        <status>1</status>
+        <vat_type>0</vat_type>
+        <pay_type>1</pay_type>
+        <locale>it</locale>
+        <currency>EUR</currency>
+        <measure>m</measure>
+        <name>SOAP order</name>
+        <create_date>2026-03-29 10:00:00</create_date>
+        <step>1</step>
+        <orders_article>
+          <item>
+            <amount>2</amount>
+            <price>11.11</price>
+            <weight>1</weight>
+            <packaging_count>1</packaging_count>
+            <pallet>1</pallet>
+            <packaging>1</packaging>
+            <swimming_pool>false</swimming_pool>
+          </item>
+        </orders_article>
+      </order>
+    </createOrder>
+  </soapenv:Body>
+</soapenv:Envelope>'
+```
+
+### 4) GET `/api/orders/{id}`
+Returns one order by id.
+
+Example:
+
+```bash
+curl "http://localhost:${APP_PORT:-8080}/api/orders/123"
+```
+
+### 5) GET `/api/search`
+Search over orders via Manticore.
+If Manticore is unavailable, service falls back to PostgreSQL `LIKE`.
+
+Query params:
+- `q` (required, min 2 chars)
+- `page` (default `1`)
+- `limit` (default `20`, max `100`)
+
+Example:
 
 ```bash
 curl "http://localhost:${APP_PORT:-8080}/api/search?q=marca&page=1&limit=20"
 ```
 
-### GET/POST `/api/search/reindex`
-Ручной запуск переиндексации поиска из PostgreSQL в Manticore.
+### 6) GET/POST `/api/search/reindex`
+Manual reindex from PostgreSQL to Manticore.
 
-Параметры:
-- `limit` (опциональный, по умолчанию `10000`, максимум `50000`)
+Query params:
+- `limit` (default `10000`, max `50000`)
 
-Пример запроса:
+Example:
 
 ```bash
 curl -X POST "http://localhost:${APP_PORT:-8080}/api/search/reindex?limit=10000"
 ```
 
-Пример ответа:
+Response example:
 
 ```json
 {
@@ -113,3 +223,13 @@ curl -X POST "http://localhost:${APP_PORT:-8080}/api/search/reindex?limit=10000"
   "limit": 10000
 }
 ```
+
+## Environment variables
+
+Main variables (from root `.env` / docker-compose):
+- `APP_PORT`
+- `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- `REDIS_PORT`
+- `MANTICORE_MYSQL_PORT`, `MANTICORE_HTTP_PORT`
+- `APP_ENV`, `APP_DEBUG`
+- `MANTICORE_URL`

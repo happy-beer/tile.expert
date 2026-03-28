@@ -6,14 +6,30 @@ namespace App\Controller\Api;
 
 use App\DTO\OrderStatsRequest;
 use App\Service\OrderStatsService;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[OA\Tag(name: 'Orders')]
 final class OrderStatsController extends AbstractController
 {
+    #[OA\Get(
+        path: '/api/orders/stats',
+        summary: 'Get orders aggregation by day, month or year',
+        parameters: [
+            new OA\Parameter(name: 'groupBy', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['day', 'month', 'year'], default: 'month')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 500)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Aggregated stats'),
+            new OA\Response(response: 400, description: 'Validation failed'),
+            new OA\Response(response: 500, description: 'Internal error'),
+        ],
+    )]
     #[Route('/api/orders/stats', name: 'api_orders_stats', methods: ['GET'])]
     public function __invoke(
         Request $request,

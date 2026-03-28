@@ -8,14 +8,44 @@ use App\DTO\PriceRequest;
 use App\Exception\ExternalResourceNotFoundException;
 use App\Exception\PriceParsingException;
 use App\Service\PriceService;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[OA\Tag(name: 'Price')]
 final class PriceController extends AbstractController
 {
+    #[OA\Get(
+        path: '/api/price',
+        summary: 'Get tile price in EUR',
+        parameters: [
+            new OA\Parameter(name: 'factory', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'collection', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'article', in: 'query', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Price found',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'price', type: 'number', format: 'float', example: 59.99),
+                        new OA\Property(property: 'factory', type: 'string', example: 'marca-corona'),
+                        new OA\Property(property: 'collection', type: 'string', example: 'arteseta'),
+                        new OA\Property(property: 'article', type: 'string', example: 'k263-arteseta-camoscio-s000628660'),
+                    ],
+                    type: 'object',
+                ),
+            ),
+            new OA\Response(response: 400, description: 'Validation failed'),
+            new OA\Response(response: 404, description: 'Tile not found'),
+            new OA\Response(response: 422, description: 'Price parsing failed'),
+            new OA\Response(response: 502, description: 'Upstream error'),
+        ],
+    )]
     #[Route('/api/price', name: 'api_price', methods: ['GET'])]
     public function __invoke(
         Request $request,

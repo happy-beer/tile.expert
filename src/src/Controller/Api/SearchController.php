@@ -6,14 +6,29 @@ namespace App\Controller\Api;
 
 use App\DTO\SearchRequest;
 use App\Service\SearchService;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[OA\Tag(name: 'Search')]
 final class SearchController extends AbstractController
 {
+    #[OA\Get(
+        path: '/api/search',
+        summary: 'Search orders via Manticore with PostgreSQL fallback',
+        parameters: [
+            new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', minLength: 2)),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20, maximum: 100)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Search result'),
+            new OA\Response(response: 400, description: 'Validation failed'),
+        ],
+    )]
     #[Route('/api/search', name: 'api_search', methods: ['GET'])]
     public function __invoke(Request $request, SearchService $searchService, ValidatorInterface $validator): JsonResponse
     {

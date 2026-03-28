@@ -1,0 +1,10 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: tile.expert API
+            description: REST and SOAP API for tile pricing, orders and search.
+            version: 1.0.0
+    areas:
+        default:
+            path_patterns:
+                - ^/api(?!/doc$)(?!/doc\.json$)
