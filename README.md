@@ -7,6 +7,8 @@ Symfony + Docker backend for:
 - single order retrieval
 - full-text search (Manticore + PostgreSQL fallback)
 
+updated DB file - docker/postgres/init/01_schema_updated.sql
+
 ## Project structure
 
 ```text
@@ -25,6 +27,21 @@ tile-app/
 - Manticore Search
 - Nginx
 - Docker Compose
+
+## Build and run
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose exec app composer install
+docker compose exec app php bin/console doctrine:migrations:migrate -n
+```
+
+Application will be available at:
+
+```text
+http://localhost:${APP_PORT:-8080}
+```
 
 ## Quick start
 
@@ -50,14 +67,6 @@ docker compose exec app composer install
 
 ```bash
 docker compose exec app php bin/console doctrine:migrations:migrate -n
-```
-
-## Load DB dump
-
-If you use the provided dump (`/Users/kitty/Downloads/dump.sql`), import it into PostgreSQL:
-
-```bash
-docker compose exec -T db psql -U ${DB_USER:-postgres} -d ${DB_NAME:-tile_app} < /Users/kitty/Downloads/dump.sql
 ```
 
 ## Useful commands
